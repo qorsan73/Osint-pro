@@ -2,10 +2,10 @@
 import asyncio
 import os
 import time
+import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
 
 GREEN = "\033[92m"
 RED = "\033[91m"
@@ -16,22 +16,42 @@ RESET = "\033[0m"
 def setup_headless_browser():
     chrome_options = Options()
     chrome_options.add_argument("--headless=new")
-    chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--window-size=1280,1024")
-    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.binary_location = "/usr/bin/chromium"
     
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=chrome_options)
-    return driver
+    service = Service(executable_path="/usr/bin/chromedriver")
+    
+    try:
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+        return driver
+    except Exception as e:
+        print(f"{RED}[!] Error launching browser: {e}{RESET}")
+        return None
+
+def check_breaches(email):
+    print(f"\n{CYAN}[*] Checking Data Breaches for: {email}...{RESET}"
+    try:
+        url = f"https://api.proxynova.com/comb?query={email}"
+        response = requests.get(url, timeout=10)
+        if response.status_code == 200 and response.json().get("count", 0) > 0:
+            print(f"{RED}[!] ALERT: This email was found in {response.json()['count']} breaches!{RESET}")
+            return response.json().get("lines", [])
+        print(f"{GREEN}[✓] No major public breaches found.{RESET}")
+    except:
+        print(f"{YELLOW}[!] Breach check failed (Connection issue).{RESET}")
+    return []
 
 def check_and_screenshot(username):
     folder_name = f"Evidence_{username}"
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
     
-    print(f"\n{CYAN}[*] Investigating: '{username}' & Collecting Evidence...{RESET}")
     driver = setup_headless_browser()
+    if not driver: return [], folder_name
+    
+    print(f"\n{CYAN}[*] Investigating: '{username}' & Capturing Evidence...{RESET}")
     
     platforms = {
         "Instagram": "https://www.instagram.com/",
@@ -39,12 +59,10 @@ def check_and_screenshot(username):
         "GitHub": "https://github.com/",
         "Facebook": "https://www.facebook.com/",
         "TikTok": "https://www.tiktok.com/@",
-        "Pinterest": "https://www.pinterest.com/",
         "Reddit": "https://www.reddit.com/user/"
     }
     
     results = []
-    
     for name, base_url in platforms.items():
         url = f"{base_url}{username}"
         try:
@@ -66,27 +84,39 @@ def check_and_screenshot(username):
     return results, folder_name
 
 async def main():
-    os.system('cls' if os.name == 'nt' else 'clear')
+    os.system('clear')
     print(f"{CYAN}=============================================")
-    print("    OSINT EVIDENCE COLLECTOR v1.0 (kali-PRO)      ")
+    print("    OSINT EVIDENCE COLLECTOR v2.0 (Kali-PRO)      ")
+    print("    Developer: #qorsan73                     ")
     print("============================================={RESET}")
     
-    target = input("\n[+] Enter Email or Username: ").strip()
-    username = target.split('@')[0] if "@" in target else target
+    target = input("\n[+] Enter Target Email: ").strip()
+    if not target or "@" not in target:
+        print(f"{RED}[!] Please enter a valid email.{RESET}")
+        return
+
+    username = target.split('@')[0]
+    
+    breaches = check_breaches(target)
     
     start_time = time.time()
     found_profiles, folder = check_and_screenshot(username)
     end_time = time.time()
     
     print(f"\n{CYAN}--- Investigation Finished ---{RESET}")
-    print(f"Time Taken: {int(end_time - start_time)} seconds")
     print(f"Evidence Folder: {os.path.abspath(folder)}")
     
-    if found_profiles:
-        with open(os.path.join(folder, "Report.txt"), "w") as f:
-            f.write(f"Target: {username}\nFound Profiles:\n" + "\n".join(found_profiles))
-        print(f"{GREEN}[✓] Full Report generated inside the folder.{RESET}")
+    with open(os.path.join(folder, "Full_Report.txt"), "w") as f:
+        f.write(f"OSINT REPORT FOR: {target}\n")
+        f.write(f"Breaches Found: {len(breaches)}\n")
+        f.write("-" * 30 + "\nProfiles:\n" + "\n".join(found_profiles))
+        if breaches:
+            f.write("\n\nBreach Data (Sample):\n" + "\n".join(breaches[:10]))
+            
+    print(f"{GREEN}[✓] Full Report generated: {folder}/Full_Report.txt{RESET}")
 
 if __name__ == "__main__":
-    asyncio.run(main())
-
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print(f"\n{RED}[!] Tool stopped.{RESET}")
