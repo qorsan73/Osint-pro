@@ -4,16 +4,42 @@ import time
 import random
 import requests
 import datetime
+import sys
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
-
 GREEN = "\033[92m"
 RED = "\033[91m"
 CYAN = "\033[96m"
 YELLOW = "\033[93m"
+BOLD = "\033[1m"
+BLINK = "\033[5m"
 RESET = "\033[0m"
+
+def banner():
+    os.system('clear' if os.name != 'nt' else 'cls')
+    logo = f"""
+{RED}
+ ██████╗ ███████╗██╗███╗   ██╗████████╗      ██████╗ ██████╗  ██████╗ 
+██╔═══██╗██╔════╝██║████╗  ██║╚══██╔══╝      ██╔══██╗██╔══██╗██╔═══██╗
+██║   ██║███████╗██║██╔██╗ ██║   ██║         ██████╔╝██████╔╝██║   ██║
+██║   ██║╚════██║██║██║╚██╗██║   ██║         ██╔═══╝ ██╔══██╗██║   ██║
+╚██████╔╝███████║██║██║ ╚████║   ██║    ██╗  ██║     ██║  ██║╚██████╔╝
+ ╚═════╝ ╚══════╝╚═╝╚═╝  ╚═══╝   ╚═╝    ╚═╝  ╚═╝     ╚═╝  ╚═╝ ╚═════╝ 
+{RESET}{CYAN}
+             [  The Shadows Are Watching Your Digital Footprint  ]
+             [           Developer: #qorsan73 - v1.0           ]
+{RESET}
+    """
+    print(logo)
+
+def typing_effect(text, color=CYAN, delay=0.03):
+    for char in text:
+        sys.stdout.write(color + char + RESET)
+        sys.stdout.flush()
+        time.sleep(delay)
+    print()
 
 def setup_stealth_browser():
     chrome_options = Options()
@@ -28,7 +54,7 @@ def setup_stealth_browser():
     try:
         service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=chrome_options)
-        driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () =>营造 undefined})")
+        driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
         return driver
     except:
         return None
@@ -53,8 +79,9 @@ def start_investigation(target):
     
     report_path = os.path.join(folder_name, "All-investigation.txt")
     
-    print(f"{CYAN}[*] Starting Full Investigation on: {username}{RESET}")
-    print(f"{YELLOW}[!] Folder Created: {folder_name}{RESET}\n")
+    print(f"\n{RED}[!] INITIALIZING DEEP SCAN ON: {username}{RESET}")
+    typing_effect("[...] Accessing Global Databases...", RED)
+    time.sleep(1)
 
     platforms = {
         "Instagram": "https://www.instagram.com/",
@@ -70,54 +97,62 @@ def start_investigation(target):
     results = []
 
     with open(report_path, "w", encoding="utf-8") as report:
-        report.write(f"OSINT-PRO INVESTIGATION REPORT - : {username}\n")
-        report.write(f"Date: {datetime.datetime.now()}\n" + "="*40 + "\n\n")
+        report.write(f"OSINT-PRO DEEP INVESTIGATION - TARGET: {username}\n")
+        report.write(f"TIMESTAMP: {datetime.datetime.now()}\n" + "="*50 + "\n\n")
 
         for name, base_url in platforms.items():
             url = f"{base_url}{username}"
-            print(f"{CYAN}[>] Checking {name}...{RESET}")
+            print(f"{YELLOW}[SCANNING] {name}...{RESET}", end="\r")
             
             try:
                 arch_url, timestamp = check_archive(username, base_url)
                 
                 is_live = False
                 if driver:
-                    driver.get(url)
-                    time.sleep(2)
-                    if "404" not in driver.title and "Not Found" not in driver.page_source:
-                        is_live = True
-                        screenshot_path = os.path.join(folder_name, f"{name}_Live.png")
-                        driver.save_screenshot(screenshot_path)
-                        print(f"{GREEN}[✓] {name}: LIVE FOUND & SCREENSHOT SAVED{RESET}")
+                    try:
+                        driver.get(url)
+                        time.sleep(2)
+                        if "404" not in driver.title and "Not Found" not in driver.page_source:
+                            is_live = True
+                            screenshot_path = os.path.join(folder_name, f"{name}_Live.png")
+                            driver.save_screenshot(screenshot_path)
+                    except: pass
+                
+                if is_live:
+                    print(f"{GREEN}[FOUND] {name}: LIVE TARGET DETECTED!{RESET}")
+                elif arch_url:
+                    print(f"{YELLOW}[GHOST] {name}: ARCHIVED DATA RECOVERED!{RESET}")
+                else:
+                    print(f"{RED}[CLEAN] {name}: No footprints found.{RESET}")
+
                 status = f"Platform: {name}\nURL: {url}\nLive: {is_live}\n"
                 if arch_url:
                     status += f"Archive: {arch_url} (Date: {timestamp})\n"
-                    print(f"{YELLOW}[∞] {name}: Archive found!{RESET}")
                 
                 if is_live or arch_url:
-                    report.write(status + "-"*20 + "\n")
+                    report.write(status + "-"*30 + "\n")
                     results.append(name)
-                else:
-                    print(f"{RED}[✗] {name}: No data found.{RESET}")
 
             except Exception as e:
-                print(f"{RED}[!] Error checking {name}{RESET}")
-            time.sleep(random.uniform(1.5, 3.0))
+                print(f"{RED}[ERROR] Failed to probe {name}{RESET}")
+            
+            time.sleep(random.uniform(0.5, 1.5))
 
     if driver: driver.quit()
     return folder_name, results
 
 if __name__ == "__main__":
-    os.system('clear' if os.name != 'nt' else 'cls')
-    print(f"{CYAN}=============================================")
-    print("    ULTIMATE STEALTH INVESTIGATOR v1.0       ")
-    print("    By : qorsan taez                         ")
-    print("============================================={RESET}")
-
-    target_input = input("\n[+] Enter Target Username/Email: ").strip()
+    banner()
+    typing_effect("[+] Enter the target's digital alias: ", YELLOW, 0.05)
+    target_input = input(f"{BOLD}>> {RESET}").strip()
+    
     if target_input:
-        folder, found = start_investigation(target_input)
-        print(f"\n{GREEN}[✓] Investigation Finished!{RESET}")
-        print(f"{CYAN}[i] Results saved in: {os.path.abspath(folder)}{RESET}")
-        print(f"{CYAN}[i] Total Platforms Found: {len(found)}{RESET}")
+        folder, found_results = start_investigation(target_input)
+        print(f"\n{RED}" + "="*50)
+        print(f"{RED}[☠] INVESTIGATION COMPLETE")
+        print(f"{CYAN}[+] Evidence Secured in: {os.path.abspath(folder)}")
+        print(f"{CYAN}[+] Vulnerabilities Exposed: {len(found_results)}")
+        print(f"{RED}" + "="*50 + f"{RESET}")
+    else:
+        print(f"{RED}[!] No target specified. Exiting...{RESET}")
 
