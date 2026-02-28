@@ -1,6 +1,11 @@
 # Osint-pro
 This is a very fast and in-depth intelligence gathering tool. 
 
+# Available operating system : 
+
+* It is recommended to use Kali Linux.
+* Termux for phones
+
 # Operating Instructions
 
 ```
@@ -20,6 +25,9 @@ python osint-pro.py
 ![153956](https://github.com/user-attachments/assets/87f8040d-eec2-4fb6-b994-3dde07f826c6)
 
 # note 
+
 This tool is for educational purposes only. I am not responsible for any misuse that may expose you to legal liability. 
+
 # To contact the developer via Telegram: @qorsantaez73
+
 # Leave a star, please 😁🤍
