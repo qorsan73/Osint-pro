@@ -31,7 +31,7 @@ def setup_headless_browser():
         return None
 
 def check_breaches(email):
-    print(f"\n{CYAN}[*] Checking Data Breaches for: {email}...{RESET}"
+    print(f"\n{CYAN}[*] Checking Data Breaches for: {email}...{RESET}")
     try:
         url = f"https://api.proxynova.com/comb?query={email}"
         response = requests.get(url, timeout=10)
