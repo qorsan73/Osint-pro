@@ -12,7 +12,13 @@ This is a very fast and in-depth intelligence gathering tool.
 pip install selenium webdriver-manager requests --break-system-packages
 ```
 ```
+rm -rf Osent-pro
+```
+```
 git clone https://github.com/qorsan73/Osint-pro
+```
+```
+pip install requests beautifulsoup4 selenium undetected-chromedriver fake-useragent colorama stem pysocks
 ```
 ```
 cd Osint-pro
