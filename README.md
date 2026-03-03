@@ -7,7 +7,7 @@ This is a very fast and in-depth intelligence gathering tool.
 * Termux for phones
 
 # Operating Instructions
->First, you must run the torrent either in the terminal or externally. Note: If it's external, you must set it to 9050.<
+>First, you must run the torrent either in the terminal or externally. Note: If it's external, you must set it to 9050.
 ```
 pip install selenium webdriver-manager requests --break-system-packages
 ```
